@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   # Node.js Frontend (React + Vite)
   frontend:
@@ -6,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: ${FRONTEND_CONTAINER_NAME:-liferay-frontend}
     ports:
-      - "${FRONTEND_HOST_PORT:-3000}:5173"
+      - "${FRONTEND_HOST_PORT:-3000}:3000"
     environment:
       - VITE_API_BASE_URL=http://liferay-portal-ce:8080
       - VITE_LIFERAY_SITE_ID=20124
@@ -17,6 +19,7 @@ services:
       liferay:
         condition: service_healthy
     restart: unless-stopped
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
     networks:
       - liferay-network
 
@@ -36,71 +39,43 @@ services:
       - liferay-network
     restart: unless-stopped
 
-  # Liferay Portal Backend
+  # Liferay Portal Backend CE
   liferay:
     image: liferay/portal:${LIFERAY_VERSION:-7.4.3.132-ga132}
     container_name: ${LIFERAY_CONTAINER_NAME:-liferay-portal-ce}
     ports:
       - "${LIFERAY_HOST_PORT:-8080}:8080"
     environment:
-      # Skip Setup Wizard
       LIFERAY_SETUP_PERIOD_WIZARD_PERIOD_ENABLED: "false"
-
-      # JVM Options
       LIFERAY_JVM_OPTS: ${LIFERAY_JVM_OPTS:-"-Xmx1g -Xms512m"}
 
-      # Disable Host Name Validation Filter (required for Docker container names)
-      LIFERAY_COM_DOT_LIFERAY_DOT_PORTAL_DOT_SERVLET_DOT_FILTERS_DOT_VALIDHOSTNAME_DOT_VALIDHOSTNAMEFIL_TER_DOT_ENABLED: "false"
+      # Disable Hostname Validation Filter
+      LIFERAY_COM_LIFERAY_PORTAL_SERVLET_FILTERS_VALIDHOSTNAME_VALIDHOSTNAMEFILTER_ENABLED: "false"
 
-      # Virtual Hosts Configuration
-      LIFERAY_VIRTUAL_PERIOD_HOSTS_PERIOD_ALLOWED: "localhost,127.0.0.1,liferay,liferay-portal-ce"
+      # Host validation
+      LIFERAY_VIRTUAL_PERIOD_HOSTS_PERIOD_ALLOWED: "localhost,127.0.0.1,liferay-portal-ce"
       LIFERAY_VIRTUAL_PERIOD_HOSTS_PERIOD_VALID_PERIOD_HOSTS: "*"
       LIFERAY_WEB_PERIOD_SERVER_PERIOD_HOSTS: "liferay-portal-ce"
 
-      # Company Configuration
+      # Default company host
       LIFERAY_COMPANY_PERIOD_DEFAULT_PERIOD_VIRTUAL_PERIOD_HOST: "localhost"
 
-      # Use embedded HSQL database (default behavior)
-      # No external database configuration needed
-
-      # Proxy Configuration (uncomment if needed for corporate networks)
-      # HTTP_PROXY: ${HTTP_PROXY}
-      # HTTPS_PROXY: ${HTTPS_PROXY}
-      # NO_PROXY: ${NO_PROXY}
-
     volumes:
-      # Persist Liferay data (includes embedded HSQL database)
       - liferay-data:/opt/liferay/data
-
-      # Persist OSGi configurations
       - liferay-osgi-configs:/opt/liferay/osgi/configs
-
-      # Persist OSGi marketplace
       - liferay-osgi-marketplace:/opt/liferay/osgi/marketplace
-
-      # Persist OSGi modules
       - liferay-osgi-modules:/opt/liferay/osgi/modules
-
-      # Persist OSGi WAR files
       - liferay-osgi-war:/opt/liferay/osgi/war
 
-      # Hot-deploy folder for built modules
+      # Hot Deploy
       - ./backend/deploy:/mnt/liferay/deploy
-
-      # Mount modules directory for hot deployment
       - ./backend/modules:/workspace/modules
-
-      # Mount themes directory for hot deployment
       - ./backend/themes:/workspace/themes
 
-      # Optional: Mount for configuration files
+      # Configs
       - ./files:/mnt/liferay/files
-
-      # Mount build configuration for Liferay deployments
       - ./backend/gradle.properties:/workspace/gradle.properties
       - ./backend/build.gradle:/workspace/build.gradle
-
-      # Mount portal configuration for Docker environment
       - ./backend/configs/docker/portal-ext.properties:/opt/liferay/portal-ext.properties
 
     restart: unless-stopped
@@ -117,19 +92,12 @@ services:
 
 volumes:
   liferay-data:
-    driver: local
   liferay-osgi-configs:
-    driver: local
   liferay-osgi-marketplace:
-    driver: local
   liferay-osgi-modules:
-    driver: local
   liferay-osgi-war:
-    driver: local
   gradle-cache:
-    driver: local
   maven-cache:
-    driver: local
 
 networks:
   liferay-network:
