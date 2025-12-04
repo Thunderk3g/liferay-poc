@@ -8,7 +8,7 @@ services:
     ports:
       - "${FRONTEND_HOST_PORT:-3000}:5173"
     environment:
-      - VITE_API_BASE_URL=http://liferay:8080
+      - VITE_API_BASE_URL=http://liferay-portal-ce:8080
       - VITE_LIFERAY_SITE_ID=20124
     volumes:
       - ./frontend/src:/app/src
@@ -49,6 +49,17 @@ services:
       # JVM Options
       LIFERAY_JVM_OPTS: ${LIFERAY_JVM_OPTS:-"-Xmx1g -Xms512m"}
 
+      # Disable Host Name Validation Filter (required for Docker container names)
+      LIFERAY_COM_DOT_LIFERAY_DOT_PORTAL_DOT_SERVLET_DOT_FILTERS_DOT_VALIDHOSTNAME_DOT_VALIDHOSTNAMEFIL_TER_DOT_ENABLED: "false"
+
+      # Virtual Hosts Configuration
+      LIFERAY_VIRTUAL_PERIOD_HOSTS_PERIOD_ALLOWED: "localhost,127.0.0.1,liferay,liferay-portal-ce"
+      LIFERAY_VIRTUAL_PERIOD_HOSTS_PERIOD_VALID_PERIOD_HOSTS: "*"
+      LIFERAY_WEB_PERIOD_SERVER_PERIOD_HOSTS: "liferay-portal-ce"
+
+      # Company Configuration
+      LIFERAY_COMPANY_PERIOD_DEFAULT_PERIOD_VIRTUAL_PERIOD_HOST: "localhost"
+
       # Use embedded HSQL database (default behavior)
       # No external database configuration needed
 
@@ -88,6 +99,9 @@ services:
       # Mount build configuration for Liferay deployments
       - ./backend/gradle.properties:/workspace/gradle.properties
       - ./backend/build.gradle:/workspace/build.gradle
+
+      # Mount portal configuration for Docker environment
+      - ./backend/configs/docker/portal-ext.properties:/opt/liferay/portal-ext.properties
 
     restart: unless-stopped
 

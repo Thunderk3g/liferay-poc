@@ -1,5 +1,5 @@
 import express from 'express';
-import { createProxyMiddleware } from 'express-http-proxy';
+import proxyMiddleware from 'express-http-proxy';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -12,22 +12,19 @@ const PORT = process.env.PORT || 5173;
 // Serve static files from dist
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// Middleware to rewrite Host header for Liferay
+app.use((req, res, next) => {
+  req.headers.host = 'localhost:8080';
+  next();
+});
+
 // Proxy API requests to Liferay
+// Use container name for internal Docker networking
 app.use(
   '/o/headless-delivery',
-  createProxyMiddleware({
-    target: process.env.VITE_API_BASE_URL || 'http://liferay:8080',
-    changeOrigin: true,
-    secure: false,
+  proxyMiddleware('http://liferay-portal-ce:8080', {
     headers: {
-      'Authorization': 'Basic ' + Buffer.from('test@liferay.com:test').toString('base64'),
-    },
-    pathRewrite: {
-      '^/o/headless-delivery': '/o/headless-delivery',
-    },
-    onError: (err, req, res) => {
-      console.error('Proxy error:', err);
-      res.status(500).json({ error: 'Proxy error', details: err.message });
+      'Authorization': 'Basic ' + Buffer.from('test@liferay.com:admin').toString('base64'),
     },
   })
 );
