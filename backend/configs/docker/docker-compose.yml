@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  gradle-builder:
+    image: gradle:8.5-jdk17
+    container_name: ${GRADLE_CONTAINER_NAME:-liferay-gradle-builder}
+    working_dir: /workspace
+    volumes:
+      # Mount workspace for Gradle builds
+      - ../../:/workspace
+      # Maven/Gradle cache for faster builds
+      - gradle-cache:/root/.gradle
+      - maven-cache:/root/.m2
+    command: gradle --version
+    profiles:
+      - build
+    environment:
+      GRADLE_OPTS: "-Xmx2g -Xms1g"
+
+  liferay:
+    image: liferay/portal:${LIFERAY_VERSION:-7.4.3.132-ga132}
+    container_name: ${LIFERAY_CONTAINER_NAME:-liferay-portal-ce}
+    ports:
+      - "${LIFERAY_HOST_PORT:-8080}:8080"
+    environment:
+      # Skip Setup Wizard
+      LIFERAY_SETUP_PERIOD_WIZARD_PERIOD_ENABLED: "false"
+
+      # JVM Options
+      LIFERAY_JVM_OPTS: ${LIFERAY_JVM_OPTS:-"-Xmx1g -Xms512m"}
+
+      # Use embedded HSQL database (default behavior)
+      # No external database configuration needed
+
+      # Proxy Configuration (uncomment if needed for corporate networks)
+      # HTTP_PROXY: ${HTTP_PROXY}
+      # HTTPS_PROXY: ${HTTPS_PROXY}
+      # NO_PROXY: ${NO_PROXY}
+
+    volumes:
+      # Persist Liferay data (includes embedded HSQL database)
+      - liferay-data:/opt/liferay/data
+
+      # Persist OSGi configurations
+      - liferay-osgi-configs:/opt/liferay/osgi/configs
+
+      # Persist OSGi marketplace
+      - liferay-osgi-marketplace:/opt/liferay/osgi/marketplace
+
+      # Persist OSGi modules
+      - liferay-osgi-modules:/opt/liferay/osgi/modules
+
+      # Persist OSGi WAR files
+      - liferay-osgi-war:/opt/liferay/osgi/war
+
+      # Hot-deploy folder for built artifacts
+      - ../../deploy:/mnt/liferay/deploy
+
+      # Mount entire workspace for build outputs
+      - ../../backend:/workspace
+
+      # Optional: Mount for configuration files
+      - ../../files:/mnt/liferay/files
+
+    restart: unless-stopped
+    depends_on:
+      - gradle-builder
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+volumes:
+  liferay-data:
+    driver: local
+  liferay-osgi-configs:
+    driver: local
+  liferay-osgi-marketplace:
+    driver: local
+  liferay-osgi-modules:
+    driver: local
+  liferay-osgi-war:
+    driver: local
+  gradle-cache:
+    driver: local
+  maven-cache:
+    driver: local
