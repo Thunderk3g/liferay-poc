@@ -9,32 +9,26 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5173;
 
-// Serve static files from dist
+// Serve static files
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Middleware to rewrite Host header for Liferay
-app.use((req, res, next) => {
-  req.headers.host = 'localhost:8080';
-  next();
-});
-
-// Proxy API requests to Liferay
-// Use container name for internal Docker networking
+// Proxy API requests
 app.use(
   '/o/headless-delivery',
   proxyMiddleware('http://liferay-portal-ce:8080', {
-    headers: {
-      'Authorization': 'Basic ' + Buffer.from('test@liferay.com:admin').toString('base64'),
+    proxyReqOptDecorator: (proxyReqOpts) => {
+      proxyReqOpts.headers['Authorization'] =
+        'Basic ' + Buffer.from('test@liferay.com:test').toString('base64');
+      return proxyReqOpts;
     },
   })
 );
 
-// SPA fallback - serve index.html for all non-API routes
+// SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Frontend server running on http://0.0.0.0:${PORT}`);
-  console.log(`📡 Proxying API to: ${process.env.VITE_API_BASE_URL || 'http://liferay:8080'}`);
+  console.log(`🚀 Running at http://0.0.0.0:${PORT}`);
 });
