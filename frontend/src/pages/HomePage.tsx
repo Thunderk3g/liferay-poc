@@ -54,7 +54,7 @@ export function HomePage() {
 
         // Fetch all structured content from Liferay via proxy
         const response = await axios.get<ApiResponse>(
-          '/o/headless-delivery/v1.0/sites/20124/structured-contents?pageSize=100',
+          '/o/headless-delivery/v1.0/sites/33815/structured-contents?pageSize=100',
           { 
             headers: {
               'Authorization': `Basic ${auth}`,

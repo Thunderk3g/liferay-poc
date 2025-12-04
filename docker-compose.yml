@@ -10,8 +10,8 @@ services:
     ports:
       - "${FRONTEND_HOST_PORT:-3000}:3000"
     environment:
-      - VITE_API_BASE_URL=http://liferay-portal-ce:8080
-      - VITE_LIFERAY_SITE_ID=20124
+      - VITE_API_BASE_URL=
+      - VITE_LIFERAY_SITE_ID=33815
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
@@ -46,7 +46,7 @@ services:
     ports:
       - "${LIFERAY_HOST_PORT:-8080}:8080"
     environment:
-      LIFERAY_SETUP_PERIOD_WIZARD_PERIOD_ENABLED: "false"
+      LIFERAY_SETUP_PERIOD_WIZARD_PERIOD_ENABLED: "true"
       LIFERAY_JVM_OPTS: ${LIFERAY_JVM_OPTS:-"-Xmx1g -Xms512m"}
 
       # Disable Hostname Validation Filter

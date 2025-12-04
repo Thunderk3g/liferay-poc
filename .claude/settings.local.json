@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:learn.liferay.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(docker-compose down:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(docker logs:*)",
+      "Bash(curl:*)",
+      "Bash(docker exec:*)",
+      "Bash(for id in 20121 20122 20123 20125 20126 20127 20128)",
+      "Bash(do echo \"Testing Site ID: $id\")",
+      "Bash(done)",
+      "Bash(docker volume:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose restart:*)"
     ],
     "deny": [],
     "ask": []

@@ -5,7 +5,7 @@ import type { LiferayAPIResponse, LiferayStructuredContent } from '@/types/lifer
 
 // API Configuration
 const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export const api = {
 export const liferayAPI = {
   // Get structured content from Liferay headless API
   getStructuredContent: async (siteId?: string): Promise<LiferayAPIResponse<LiferayStructuredContent>> => {
-    const site = siteId || import.meta.env.VITE_LIFERAY_SITE_ID || '20124';
+    const site = siteId || import.meta.env.VITE_LIFERAY_SITE_ID || '33815';
     return api.get(`/o/headless-delivery/v1.0/sites/${site}/structured-contents`);
   },
 

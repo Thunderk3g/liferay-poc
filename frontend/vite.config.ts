@@ -13,7 +13,7 @@ export default defineConfig({
 
   server: {
     host: "0.0.0.0",
-    port: 5173,
+    port: 3000,
     strictPort: true,
     proxy: {
       "/o/headless-delivery": {
@@ -21,8 +21,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         configure: (proxy) => {
-          proxy.on("proxyReq", (proxyReq) => {
-            proxyReq.setHeader("host", "liferay-portal-ce:8080");
+          proxy.on("proxyReq", (proxyReq, req) => {
+            // Forward Authorization header from client
+            if (req.headers.authorization) {
+              proxyReq.setHeader("Authorization", req.headers.authorization);
+            }
+            // Don't override the host header - let changeOrigin handle it
           });
         },
       },
